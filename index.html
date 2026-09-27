@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>コースメニュー</title>
+
+<link rel="manifest" href="manifest.json">
+
+<meta name="theme-color" content="#333333">
+
+<meta name="mobile-web-app-capable" content="yes">
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 10px;
+    background: #fff;
+    color: #222;
+}
+
+.box {
+    max-width: 600px;
+    margin: auto;
+}
+
+h1 {
+    font-size: 20px;
+    text-align: center;
+    margin: 5px 0 10px;
+}
+
+h2 {
+    font-size: 17px;
+    margin: 18px 0 8px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+}
+
+/* 検索 */
+
+.search-box {
+    width: 100%;
+    height: 40px;
+    padding: 6px 10px;
+    border: 1px solid #bbb;
+    border-radius: 3px;
+    font-size: 15px;
+    margin-bottom: 15px;
+}
+
+/* 入力欄 */
+
+.info-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 7px;
+}
+
+.info-label {
+    width: 105px;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.info-input {
+    flex: 1;
+    min-width: 0;
+    height: 38px;
+    padding: 6px 8px;
+    border: 1px solid #bbb;
+    border-radius: 3px;
+    font-size: 15px;
+}
+
+/* 料理 */
+
+.food {
+    margin-bottom: 6px;
+}
+
+.food-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.food-number {
+    width: 22px;
+    font-size: 14px;
+    text-align: right;
+}
+
+.food-name {
+    flex: 1;
+    min-width: 0;
+    height: 36px;
+    padding: 5px 7px;
+    border: 1px solid #bbb;
+    border-radius: 3px;
+    font-size: 15px;
+}
+
+.food-price {
+    width: 80px;
+    height: 36px;
+    padding: 5px;
+    border: 1px solid #bbb;
+    border-radius: 3px;
+    font-size: 15px;
+    text-align: right;
+}
+
+/* ボタン */
+
+button {
+    border: 0;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.delete {
+    width: 45px;
+    height: 36px;
+    background: #eee;
+    color: #555;
+    font-size: 12px;
+}
+
+.main-button {
+    width: 100%;
+    height: 38px;
+    margin-top: 8px;
+    background: #333;
+    color: white;
+    font-size: 14px;
+}
+
+.save {
+    background: #555;
+}
+
+/* 結果 */
+
+.result {
+    margin-top: 15px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+/* 保存したコース */
+
+.saved {
+    margin-top: 20px;
+}
+
+.saved-item {
+    border-bottom: 1px solid #ddd;
+    padding: 8px 0;
+    font-size: 14px;
+}
+
+.saved-item button {
+    height: 32px;
+    padding: 0 10px;
+    margin: 5px 5px 0 0;
+    font-size: 12px;
+    background: #eee;
+}
+
+.saved-item .load {
+    background: #ddd;
+}
+
+.no-result {
+    font-size: 14px;
+    color: #777;
+    padding: 8px 0;
+}
+
+@media (max-width: 400px) {
+
+    .info-label {
+        width: 95px;
+        font-size: 13px;
+    }
+
+    .food-price {
+        width: 70px;
+    }
+
+    .delete {
+        width: 42px;
+    }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="box">
+
+<h1>コースメニュー</h1>
+
+<!-- 検索 -->
+
+<input
+type="text"
+id="searchKeyword"
+class="search-box"
+placeholder="キーワード検索（名前・コース名・料理名）"
+oninput="displaySavedCourses()"
+>
+
+<!-- お客様情報 -->
+
+<div class="info-row">
+
+<div class="info-label">
+お客様のお名前
+</div>
+
+<input
+class="info-input"
+type="text"
+id="customerName"
+placeholder="名前"
+>
+
+</div>
+
+
+<div class="info-row">
+
+<div class="info-label">
+コース名
+</div>
+
+<input
+class="info-input"
+type="text"
+id="courseName"
+placeholder="コース名"
+>
+
+</div>
+
+
+<div class="info-row">
+
+<div class="info-label">
+販売価格
+</div>
+
+<input
+class="info-input"
+type="number"
+id="price"
+placeholder="5000"
+>
+
+</div>
+
+
+<div class="info-row">
+
+<div class="info-label">
+人数
+</div>
+
+<input
+class="info-input"
+type="number"
+id="people"
+placeholder="4"
+>
+
+</div>
+
+
+<h2>料理</h2>
+
+<div id="foods"></div>
+
+
+<button
+class="main-button"
+onclick="addFood()">
+
+＋ 料理を追加
+
+</button>
+
+
+<button
+class="main-button"
+onclick="createMenu()">
+
+コースを作成
+
+</button>
+
+
+<button
+class="main-button save"
+onclick="saveCourse()">
+
+保存
+
+</button>
+
+
+<div
+class="result"
+id="result"
+style="display:none;">
+
+</div>
+
+
+<div class="saved">
+
+<h2>保存したコース</h2>
+
+<div id="savedCourses"></div>
+
+</div>
+
+</div>
+
+
+<script>
+
+let foodCount = 0;
+
+
+/* 料理追加 */
+
+function addFood() {
+
+    foodCount++;
+
+    const food =
+    document.createElement("div");
+
+    food.className = "food";
+
+    food.id =
+    "food" + foodCount;
+
+    food.innerHTML = `
+
+    <div class="food-row">
+
+        <span class="food-number">
+        ${foodCount}.
+        </span>
+
+        <input
+        type="text"
+        class="food-name"
+        placeholder="料理名">
+
+        <input
+        type="number"
+        class="food-price"
+        placeholder="金額">
+
+        <button
+        class="delete"
+        onclick="deleteFood(${foodCount})">
+
+        削除
+
+        </button>
+
+    </div>
+
+    `;
+
+    document
+    .getElementById("foods")
+    .appendChild(food);
+
+}
+
+
+/* 料理削除 */
+
+function deleteFood(id) {
+
+    const food =
+    document.getElementById(
+        "food" + id
+    );
+
+    if (food) {
+
+        food.remove();
+
+        renumberFoods();
+
+    }
+
+}
+
+
+/* 番号振り直し */
+
+function renumberFoods() {
+
+    const foods =
+    document.querySelectorAll(".food");
+
+    foods.forEach(
+        function(food, index) {
+
+            food
+            .querySelector(".food-number")
+            .textContent =
+            (index + 1) + ".";
+
+        }
+    );
+
+}
+
+
+/* データ取得 */
+
+function getCourseData() {
+
+    const foods = [];
+
+    const names =
+    document.querySelectorAll(
+        ".food-name"
+    );
+
+    const prices =
+    document.querySelectorAll(
+        ".food-price"
+    );
+
+
+    for (
+        let i = 0;
+        i < names.length;
+        i++
+    ) {
+
+        if (
+            names[i].value.trim() !== ""
+        ) {
+
+            foods.push({
+
+                name:
+                names[i].value,
+
+                price:
+                Number(
+                    prices[i].value
+                )
+
+            });
+
+        }
+
+    }
+
+
+    return {
+
+        name:
+        document
+        .getElementById(
+            "customerName"
+        ).value,
+
+        course:
+        document
+        .getElementById(
+            "courseName"
+        ).value,
+
+        price:
+        Number(
+            document
+            .getElementById(
+                "price"
+            ).value
+        ),
+
+        people:
+        Number(
+            document
+            .getElementById(
+                "people"
+            ).value
+        ),
+
+        foods: foods
+
+    };
+
+}
+
+
+/* コース作成 */
+
+function createMenu() {
+
+    showResult(
+        getCourseData()
+    );
+
+}
+
+
+/* 結果表示 */
+
+function showResult(data) {
+
+    let html = "";
+
+    html +=
+    "<b>" +
+    data.name +
+    "</b>　" +
+    data.course +
+    "<br>";
+
+    html +=
+    data.people +
+    "名　" +
+    Number(
+        data.price
+    ).toLocaleString() +
+    "円";
+
+    html += "<hr>";
+
+    let total = 0;
+
+
+    data.foods.forEach(
+        function(food, index) {
+
+            total +=
+            Number(food.price);
+
+            html +=
+            (index + 1) +
+            ". " +
+            food.name +
+            "　" +
+            Number(
+                food.price
+            ).toLocaleString() +
+            "円<br>";
+
+        }
+    );
+
+
+    html +=
+    "<hr>" +
+    "<b>料理合計　" +
+    total.toLocaleString() +
+    "円</b>";
+
+
+    const result =
+    document.getElementById(
+        "result"
+    );
+
+    result.innerHTML =
+    html;
+
+    result.style.display =
+    "block";
+
+}
+
+
+/* 保存 */
+
+function saveCourse() {
+
+    const data =
+    getCourseData();
+
+
+    let courses =
+    JSON.parse(
+        localStorage.getItem(
+            "courseMenuData"
+        )
+    ) || [];
+
+
+    data.id =
+    Date.now();
+
+
+    courses.push(data);
+
+
+    localStorage.setItem(
+        "courseMenuData",
+        JSON.stringify(courses)
+    );
+
+
+    displaySavedCourses();
+
+    alert("保存しました");
+
+}
+
+
+/* 保存コース表示 */
+
+function displaySavedCourses() {
+
+    const area =
+    document.getElementById(
+        "savedCourses"
+    );
+
+
+    const courses =
+    JSON.parse(
+        localStorage.getItem(
+            "courseMenuData"
+        )
+    ) || [];
+
+
+    const keyword =
+    document.getElementById(
+        "searchKeyword"
+    ).value
+    .trim()
+    .toLowerCase();
+
+
+    area.innerHTML = "";
+
+
+    const filtered =
+    courses.filter(
+        function(course) {
+
+            if (keyword === "") {
+                return true;
+            }
+
+
+            if (
+                course.name
+                .toLowerCase()
+                .includes(keyword)
+            ) {
+                return true;
+            }
+
+
+            if (
+                course.course
+                .toLowerCase()
+                .includes(keyword)
+            ) {
+                return true;
+            }
+
+
+            if (
+                course.foods.some(
+                    function(food) {
+
+                        return food.name
+                        .toLowerCase()
+                        .includes(keyword);
+
+                    }
+                )
+            ) {
+                return true;
+            }
+
+
+            return false;
+
+        }
+    );
+
+
+    if (filtered.length === 0) {
+
+        area.innerHTML =
+        '<div class="no-result">' +
+        '該当するコースはありません。' +
+        '</div>';
+
+        return;
+
+    }
+
+
+    filtered
+    .slice()
+    .reverse()
+    .forEach(
+        function(course) {
+
+            const div =
+            document.createElement(
+                "div"
+            );
+
+            div.className =
+            "saved-item";
+
+
+            div.innerHTML =
+            "<b>" +
+            course.name +
+            "</b>　" +
+            course.course +
+            "<br>" +
+            course.people +
+            "名　" +
+            Number(
+                course.price
+            ).toLocaleString() +
+            "円";
+
+
+            const load =
+            document.createElement(
+                "button"
+            );
+
+            load.className =
+            "load";
+
+            load.textContent =
+            "表示";
+
+
+            load.onclick =
+            function() {
+
+                showResult(
+                    course
+                );
+
+            };
+
+
+            const del =
+            document.createElement(
+                "button"
+            );
+
+            del.textContent =
+            "削除";
+
+
+            del.onclick =
+            function() {
+
+                deleteCourse(
+                    course.id
+                );
+
+            };
+
+
+            div.appendChild(load);
+
+            div.appendChild(del);
+
+            area.appendChild(div);
+
+        }
+    );
+
+}
+
+
+/* 保存データ削除 */
+
+function deleteCourse(id) {
+
+    let courses =
+    JSON.parse(
+        localStorage.getItem(
+            "courseMenuData"
+        )
+    ) || [];
+
+
+    courses =
+    courses.filter(
+        function(course) {
+
+            return course.id !== id;
+
+        }
+    );
+
+
+    localStorage.setItem(
+        "courseMenuData",
+        JSON.stringify(courses)
+    );
+
+
+    displaySavedCourses();
+
+}
+
+
+/* 最初の料理欄 */
+
+addFood();
+addFood();
+addFood();
+
+
+/* 保存データ表示 */
+
+displaySavedCourses();
+
+
+/* アプリ化 */
+
+if ("serviceWorker" in navigator) {
+
+    window.addEventListener(
+        "load",
+        function() {
+
+            navigator.serviceWorker
+            .register("sw.js");
+
+        }
+    );
+
+}
+
+</script>
+
+</body>
+</html>
